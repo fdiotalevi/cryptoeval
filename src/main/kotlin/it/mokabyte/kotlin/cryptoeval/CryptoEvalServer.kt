@@ -25,8 +25,10 @@ fun retrieveQuotes() : List<Quote> {
     return jsonResponse.map(::toQuote)
 }
 
+fun List<Quote>.findQuote(symbol: String) =
+        this.find { it.symbol.toUpperCase() == symbol.toUpperCase() }?.priceUsd ?: BigDecimal.ZERO
 
 fun main(args: Array<String>) {
-    println(retrieveQuotes())
+    println(retrieveQuotes().findQuote("BTC"))
 }
 
