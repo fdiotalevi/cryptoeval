@@ -15,30 +15,31 @@ import java.math.BigDecimal
 
 data class Quote(val symbol: String, val priceUsd: BigDecimal)
 
-
 fun retrieveQuotes() : List<Quote> {
 
     val client = ApacheClient()
     val request = Request(Method.GET, "https://api.coinmarketcap.com/v1/ticker/?limit=20")
     val jsonResponse = parse(client(request).bodyString())
 
-    fun toQuote(jsonQuote: JsonNode) = Quote(symbol = jsonQuote["symbol"].asText(), priceUsd = jsonQuote["price_usd"].asText().toBigDecimal())
+    fun toQuote(jsonQuote: JsonNode) = Quote(
+            symbol = jsonQuote["symbol"].asText(),
+            priceUsd = jsonQuote["price_usd"].asText().toBigDecimal()
+    )
+
     return jsonResponse.map(::toQuote)
 }
 
 
-fun List<Quote>.findQuote(symbol: String) = this.find { it.symbol.toUpperCase() == symbol.toUpperCase() }?.priceUsd ?: BigDecimal.ZERO
+fun List<Quote>.findQuote(symbol: String) =
+        this.find { it.symbol.toUpperCase() == symbol.toUpperCase() }?.priceUsd ?: BigDecimal.ZERO
 
 
 fun endpoint(request: Request) : Response {
-
     val quotes = retrieveQuotes()
-
     val portfolio = request.uri
             .queries()
-            .map { ( symbol, amount) -> BigDecimal(amount) * quotes.findQuote(symbol) }
+            .map { ( symbol, quantity) -> BigDecimal(quantity) * quotes.findQuote(symbol) }
             .fold(BigDecimal.ZERO, { first, second ->  first + second })
-
 
     return Response(OK).body("$portfolio")
 }
